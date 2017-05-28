@@ -1,9 +1,9 @@
 import unittest
 from mock import patch
 
-from .. import Cognito, UserObj, TokenVerificationException
-from ..secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD
-from ..aws_srp import AWSSRP
+from warrant import Cognito, UserObj, TokenVerificationException
+from warrant.secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD
+from warrant.aws_srp import AWSSRP
 
 
 class UserObjTestCase(unittest.TestCase):
@@ -29,9 +29,9 @@ class UserObjTestCase(unittest.TestCase):
 
     def test_init(self):
         u = UserObj('bjones', self.user_info, self.user, self.user_metadata)
-        self.assertEqual(u.pk, self.user_metadata.get('username'))
-        self.assertEqual(u.name, self.user_info[0].get('Value'))
-        self.assertEqual(u.user_status, self.user_metadata.get('user_status'))
+        self.assertEquals(u.pk, self.user_metadata.get('username'))
+        self.assertEquals(u.name, self.user_info[0].get('Value'))
+        self.assertEquals(u.user_status, self.user_metadata.get('user_status'))
 
 
 class CognitoAuthTestCase(unittest.TestCase):
@@ -63,9 +63,9 @@ class CognitoAuthTestCase(unittest.TestCase):
     def test_logout(self):
         self.user.authenticate(self.password)
         self.user.logout()
-        self.assertEqual(self.user.id_token, None)
-        self.assertEqual(self.user.refresh_token, None)
-        self.assertEqual(self.user.access_token, None)
+        self.assertEquals(self.user.id_token, None)
+        self.assertEquals(self.user.refresh_token, None)
+        self.assertEquals(self.user.access_token, None)
 
     @patch('warrant.Cognito', autospec=True)
     def test_register(self, cognito_user):
@@ -103,7 +103,7 @@ class CognitoAuthTestCase(unittest.TestCase):
 
     def test_admin_get_user(self):
         u = self.user.admin_get_user()
-        self.assertEqual(u.pk, self.username)
+        self.assertEquals(u.pk, self.username)
     
     def test_check_token(self):
         self.user.authenticate(self.password)
@@ -154,7 +154,7 @@ class CognitoAuthTestCase(unittest.TestCase):
                 'somerandom': 'attribute'
             }
         )
-        self.assertEquals(u.somerandom, 'attribute')
+        self.assertEqualss(u.somerandom, 'attribute')
 
     def test_admin_authenticate(self):
         self.user.admin_authenticate(self.password)
