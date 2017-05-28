@@ -1,7 +1,7 @@
 import unittest
 
 from mock import patch
-from envs import env
+from ..secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD
 
 from warrant import Cognito, UserObj, TokenVerificationException
 from warrant.aws_srp import AWSSRP
@@ -13,9 +13,9 @@ AWSSRP_TEST_FILE = 'awssrp_test_variables.json'
 class UserObjTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.cognito_user_pool_id = env('COGNITO_USER_POOL_ID')
-        self.app_id = env('COGNITO_APP_ID')
-        self.username = env('COGNITO_TEST_USERNAME')
+        self.cognito_user_pool_id = COGNITO_USER_POOL_ID
+        self.app_id = COGNITO_APP_ID
+        self.username = COGNITO_TEST_USERNAME
 
         self.user = Cognito(self.cognito_user_pool_id, self.app_id,
                             self.username)
@@ -39,10 +39,10 @@ class UserObjTestCase(unittest.TestCase):
 class CognitoAuthTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.cognito_user_pool_id = env('COGNITO_USER_POOL_ID')
-        self.app_id = env('COGNITO_APP_ID')
-        self.username = env('COGNITO_TEST_USERNAME')
-        self.password = env('COGNITO_TEST_PASSWORD')
+        self.cognito_user_pool_id = COGNITO_USER_POOL_ID
+        self.app_id = COGNITO_APP_ID
+        self.username = COGNITO_TEST_USERNAME
+        self.password = COGNITO_TEST_PASSWORD
         self.user = Cognito(self.cognito_user_pool_id,self.app_id,
                          username=self.username)
 
@@ -85,12 +85,11 @@ class CognitoAuthTestCase(unittest.TestCase):
         self.user.renew_access_token()
 
     @patch('warrant.Cognito', autospec=True)
-    def test_update_profile(self,cognito_user):
+    def test_update_profile(self, cognito_user):
         u = cognito_user(self.cognito_user_pool_id, self.app_id,
                          username=self.username)
         u.authenticate(self.password)
-        u.update_profile({'given_name':'Jenkins'})
-
+        u.update_profile({'given_name': 'Jenkins'})
 
     def test_admin_get_user(self):
         u = self.user.admin_get_user()
@@ -99,7 +98,6 @@ class CognitoAuthTestCase(unittest.TestCase):
     def test_check_token(self):
         self.user.authenticate(self.password)
         self.assertFalse(self.user.check_token())
-
 
     @patch('warrant.Cognito', autospec=True)
     def test_validate_verification(self,cognito_user):
@@ -136,11 +134,9 @@ class CognitoAuthTestCase(unittest.TestCase):
                 'somerandom':'attribute'
             }
         )
-        self.assertEquals(u.somerandom,'attribute')
+        self.assertEquals(u.somerandom, 'attribute')
 
-    
     def test_admin_authenticate(self):
-        
         self.user.admin_authenticate(self.password)
         self.assertNotEqual(self.user.access_token,None)
         self.assertNotEqual(self.user.id_token, None)
@@ -150,14 +146,16 @@ class CognitoAuthTestCase(unittest.TestCase):
 class AWSSRPTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.cognito_user_pool_id = env('COGNITO_USER_POOL_ID')
-        self.app_id = env('COGNITO_APP_ID')
-        self.username = env('COGNITO_TEST_USERNAME')
-        self.password = env('COGNITO_TEST_PASSWORD')
+        self.cognito_user_pool_id = COGNITO_USER_POOL_ID
+        self.app_id = COGNITO_APP_ID
+        self.username = COGNITO_TEST_USERNAME
+        self.password = COGNITO_TEST_PASSWORD
 
-        self.aws = AWSSRP(username=self.username, password=self.password,
-                          pool_id=self.cognito_user_pool_id,
-                          client_id=self.app_id)
+        self.aws = AWSSRP(
+            username=self.username, password=self.password,
+            pool_id=self.cognito_user_pool_id,
+            client_id=self.app_id
+        )
 
     def tearDown(self):
         del self.aws
