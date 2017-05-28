@@ -172,7 +172,8 @@ class AWSSRPTestCase(unittest.TestCase):
         self.password = COGNITO_TEST_PASSWORD
 
         self.aws = AWSSRP(
-            username=self.username, password=self.password,
+            username=self.username,
+            password=self.password,
             pool_id=self.cognito_user_pool_id,
             client_id=self.app_id
         )

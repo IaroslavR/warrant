@@ -313,8 +313,13 @@ class Cognito(object):
         :param password: The user's passsword
         :return:
         """
-        aws = AWSSRP(username=self.username, password=password, pool_id=self.user_pool_id,
-                     client_id=self.client_id, client=self.client)
+        aws = AWSSRP(
+            username=self.username,
+            password=password,
+            pool_id=self.user_pool_id,
+            client_id=self.client_id,
+            client=self.client
+        )
         tokens = aws.authenticate_user()
         self.verify_token(tokens['AuthenticationResult']['IdToken'], 'id_token', 'id')
         self.refresh_token = tokens['AuthenticationResult']['RefreshToken']
@@ -325,7 +330,7 @@ class Cognito(object):
         """
         Respond to the new password challenge using the SRP protocol
         :param password: The user's current passsword
-        :param password: The user's new passsword
+        :param new_password: The user's new passsword
         """
         aws = AWSSRP(
             username=self.username,
