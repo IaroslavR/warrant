@@ -1,10 +1,10 @@
 import ast
-from envs import env
 import boto3
 import requests
 import jwt
 
 from .aws_srp import AWSSRP
+from .secrets import AWS_REGION, COGNITO_JWKS
 from .exceptions import TokenVerificationException
 
 
@@ -110,13 +110,14 @@ class Cognito(object):
 
         self.user_pool_id = user_pool_id
         self.client_id = client_id
-        self.user_pool_region = user_pool_region or env('AWS_DEFAULT_REGION', 'us-east-1')
+        self.user_pool_region = user_pool_region or AWS_REGION
         self.username = username
         self.id_token = id_token
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.secret_hash = secret_hash
         self.token_type = None
+        self.json_web_keys = COGNITO_JWKS['keys']
 
         if access_key and secret_key:
             self.client = boto3.client(
@@ -128,25 +129,8 @@ class Cognito(object):
         else:
             self.client = boto3.client('cognito-idp')
 
-    def get_keys(self):
-
-        try:
-            return self.pool_jwk
-        except AttributeError:
-            # Check for the dictionary in environment variables.
-            pool_jwk_env = env('COGNITO_JWKS', {}, var_type='dict')
-            if len(pool_jwk_env.keys()) > 0:
-                self.pool_jwk = pool_jwk_env
-                return self.pool_jwk
-            # If it is not there use the requests library to get it
-            self.pool_jwk = requests.get(
-                'https://cognito-idp.{}.amazonaws.com/{}/.well-known/jwks.json'.format(
-                    self.user_pool_region, self.user_pool_id
-                )).json()
-            return self.pool_jwk
-
     def get_key(self, kid):
-        keys = self.get_keys().get('keys')
+        keys = self.json_web_keys
         key = list(filter(lambda x: x.get('kid') == kid, keys))
         return key[0]
 
