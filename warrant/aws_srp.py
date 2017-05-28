@@ -116,7 +116,7 @@ class AWSSRP(object):
         self.k = hex_to_long(hex_hash('00' + n_hex + '0' + g_hex))
         self.small_a_value = self.generate_random_small_a()
         self.large_a_value = self.calculate_a()
-        self.response = None
+        self.access_token = None                                # Allows connection to be closed.
 
     def generate_random_small_a(self):
         """
@@ -196,13 +196,13 @@ class AWSSRP(object):
     def authenticate_user(self, client=None):
         boto_client = self.client or client
         auth_params = self.get_auth_params()
-        self.response = boto_client.initiate_auth(
+        response = boto_client.initiate_auth(
             AuthFlow='USER_SRP_AUTH',
             AuthParameters=auth_params,
             ClientId=self.client_id
         )
-        if self.response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
-            challenge_response = self.process_challenge(self.response['ChallengeParameters'])
+        if response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
+            challenge_response = self.process_challenge(response['ChallengeParameters'])
             tokens = boto_client.respond_to_auth_challenge(
                 ClientId=self.client_id,
                 ChallengeName=self.PASSWORD_VERIFIER_CHALLENGE,
@@ -212,20 +212,21 @@ class AWSSRP(object):
             if tokens.get('ChallengeName') == self.NEW_PASSWORD_REQUIRED_CHALLENGE:
                 raise ForceChangePasswordException('Change password before authenticating')
 
+            self.access_token = tokens['AuthenticationResult']['AccessToken']
             return tokens
         else:
-            raise NotImplementedError('The %s challenge is not supported' % self.response['ChallengeName'])
+            raise NotImplementedError('The %s challenge is not supported' % response['ChallengeName'])
 
     def set_new_password_challenge(self, new_password, client=None):
         boto_client = self.client or client
         auth_params = self.get_auth_params()
-        self.response = boto_client.initiate_auth(
+        response = boto_client.initiate_auth(
             AuthFlow='USER_SRP_AUTH',
             AuthParameters=auth_params,
             ClientId=self.client_id
         )
-        if self.response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
-            challenge_response = self.process_challenge(self.response['ChallengeParameters'])
+        if response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
+            challenge_response = self.process_challenge(response['ChallengeParameters'])
             tokens = boto_client.respond_to_auth_challenge(
                 ClientId=self.client_id,
                 ChallengeName=self.PASSWORD_VERIFIER_CHALLENGE,
@@ -242,16 +243,18 @@ class AWSSRP(object):
                     Session=tokens['Session'],
                     ChallengeResponses=challenge_response)
                 return new_password_response
+
+            self.access_token = tokens['AuthenticationResult']['AccessToken']
             return tokens
         else:
-            raise NotImplementedError('The %s challenge is not supported' % self.response['ChallengeName'])
+            raise NotImplementedError('The %s challenge is not supported' % response['ChallengeName'])
 
-    # def close_ssl_socket(self):
-    #     """
-    #     Force the SSL Socket connection to close.  See these open issues.
-    #     https://github.com/boto/boto3/issues/454
-    #     https://github.com/kennethreitz/requests/issues/2963#issuecomment-169631513
-    #     :return: None
-    #     """
-    #     self.response.raw.close()
-    #     self.response.raw._connection.close()
+    def close_ssl_socket(self):
+        """
+        Force the SSL Socket connection to close.  See these open issues. It is not working.
+        https://github.com/boto/boto3/issues/454
+        https://github.com/kennethreitz/requests/issues/2963#issuecomment-169631513
+        :return: None
+        """
+        self.client.global_sign_out(AccessToken=self.access_token)
+        del self.client

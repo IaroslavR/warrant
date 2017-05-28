@@ -200,6 +200,7 @@ class AWSSRPTestCase(unittest.TestCase):
         )
 
     def tearDown(self):
+        self.awssrp.close_ssl_socket()
         del self.awssrp
 
     def test_authenticate_user(self):
