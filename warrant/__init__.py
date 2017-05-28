@@ -1,6 +1,5 @@
 import ast
 from envs import env
-import datetime
 import boto3
 import requests
 import jwt
@@ -154,24 +153,22 @@ class Cognito(object):
 
     def verify_token(self, token, id_name, token_use):
         kid = jwt.get_unverified_header(token).get('kid')
-        # unverified_claims = jwt.get_unverified_claims(token)
-        # token_use_verified = unverified_claims.get('token_use') == token_use
-        # if not token_use_verified:
-        #     raise TokenVerificationException('Your {} token use could not be verified.')
         hmac_key = self.get_key(kid)
+        options = {'verify_exp': True}
 
         try:
-            verified = jwt.decode(
-                token,
+            jwt.decode(
+                jwt=self.access_token,
                 key=hmac_key,
-                algorithms=['RS256']
+                algorithms=['RS256'],
+                options=options
             )
         except jwt.DecodeError:
             # raise TokenVerificationException('Your {} token could not be verified.')
             raise jwt.DecodeError
         
         setattr(self, id_name, token)
-        return verified
+        return True
 
     def get_user_obj(self, username=None, attribute_list=[], metadata={}, attr_map=dict()):
         """
@@ -209,10 +206,18 @@ class Cognito(object):
         """
         if not self.access_token:
             raise AttributeError('Access Token Required to Check Token')
-        now = datetime.datetime.now()
-        dec_access_token = jwt.get_unverified_claims(self.access_token)
+        kid = jwt.get_unverified_header(self.access_token).get('kid')
+        hmac_key = self.get_key(kid)
+        options = {'verify_exp': True}
 
-        if now > datetime.datetime.fromtimestamp(dec_access_token['exp']):
+        try:
+            jwt.decode(
+                jwt=self.access_token,
+                key=hmac_key,
+                algorithms=['RS256'],
+                options=options
+            )
+        except jwt.DecodeError:
             self.renew_access_token()
             return True
         return False
