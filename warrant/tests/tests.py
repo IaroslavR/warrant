@@ -1,10 +1,9 @@
 import unittest
-
 from mock import patch
-from ..secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD
 
-from warrant import Cognito, UserObj, TokenVerificationException
-from warrant.aws_srp import AWSSRP
+from .. import Cognito, UserObj, TokenVerificationException
+from ..secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD
+from ..aws_srp import AWSSRP
 
 
 class UserObjTestCase(unittest.TestCase):
@@ -76,8 +75,8 @@ class CognitoAuthTestCase(unittest.TestCase):
             username=self.username
         )
         res = u.register(
-            'sampleuser',
-            'sample4#Password',
+            username='sampleuser',
+            password='sample4#Password',
             given_name='Brian',
             family_name='Jones',
             name='Brian Jones',
@@ -145,11 +144,12 @@ class CognitoAuthTestCase(unittest.TestCase):
 
     def test_set_attributes(self):
         u = Cognito(self.cognito_user_pool_id, self.app_id)
-        u._set_attributes({
+        u._set_attributes(
+            {
                 'ResponseMetadata': {
                     'HTTPStatusCode': 200
                 }
-        },
+            },
             {
                 'somerandom': 'attribute'
             }
