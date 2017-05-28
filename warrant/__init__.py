@@ -154,7 +154,13 @@ class Cognito(object):
     def verify_token(self, token, id_name, token_use):
         kid = jwt.get_unverified_header(token).get('kid')
         hmac_key = self.get_key(kid)
-        options = {'verify_exp': True}
+        print('kid', kid)
+        print('token_use', token_use)
+        options = {
+            'verify_exp': True,
+            'verify_aud': True,
+            'verify_iss': True,
+        }
 
         try:
             jwt.decode(
@@ -208,7 +214,11 @@ class Cognito(object):
             raise AttributeError('Access Token Required to Check Token')
         kid = jwt.get_unverified_header(self.access_token).get('kid')
         hmac_key = self.get_key(kid)
-        options = {'verify_exp': True}
+        options = {
+            'verify_exp': True,
+            'verify_aud': True,
+            'verify_iss': True,
+        }
 
         try:
             jwt.decode(
