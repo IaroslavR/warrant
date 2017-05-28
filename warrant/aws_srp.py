@@ -9,6 +9,7 @@ import boto3
 import os
 import six
 
+from .secrets import SESSION_PROFILE_NAME
 from .exceptions import ForceChangePasswordException
 
 # https://github.com/aws/amazon-cognito-identity-js/blob/master/src/AuthenticationHelper.js#L22
@@ -96,16 +97,26 @@ class AWSSRP(object):
     PASSWORD_VERIFIER_CHALLENGE = 'PASSWORD_VERIFIER'
 
     def __init__(self, username, password, pool_id, client_id, client=None):
+        """
+        AWSSRP - Amazon Web Services Secure Remote Password
+        :param username:
+        :param password:
+        :param pool_id:
+        :param client_id:
+        :param client:
+        """
         self.username = username
         self.password = password
         self.pool_id = pool_id
         self.client_id = client_id
-        self.client = client if client else boto3.client('cognito-idp')
+        self.session = boto3.Session(profile_name=SESSION_PROFILE_NAME)
+        self.client = client if client else self.session.client('cognito-idp')
         self.big_n = hex_to_long(n_hex)
         self.g = hex_to_long(g_hex)
         self.k = hex_to_long(hex_hash('00' + n_hex + '0' + g_hex))
         self.small_a_value = self.generate_random_small_a()
         self.large_a_value = self.calculate_a()
+        self.response = None
 
     def generate_random_small_a(self):
         """
@@ -168,8 +179,12 @@ class AWSSRP(object):
         hkdf = self.get_password_authentication_key(user_id_for_srp,
                                                     self.password, hex_to_long(srp_b_hex), salt_hex)
         secret_block_bytes = base64.standard_b64decode(secret_block_b64)
-        msg = bytearray(self.pool_id.split('_')[1], 'utf-8') + bytearray(user_id_for_srp, 'utf-8') + \
-              bytearray(secret_block_bytes) + bytearray(timestamp, 'utf-8')
+        msg = (
+            bytearray(self.pool_id.split('_')[1], 'utf-8') +
+            bytearray(user_id_for_srp, 'utf-8') +
+            bytearray(secret_block_bytes) +
+            bytearray(timestamp, 'utf-8')
+        )
         hmac_obj = hmac.new(hkdf, msg, digestmod=hashlib.sha256)
         signature_string = base64.standard_b64encode(hmac_obj.digest())
 
@@ -181,35 +196,36 @@ class AWSSRP(object):
     def authenticate_user(self, client=None):
         boto_client = self.client or client
         auth_params = self.get_auth_params()
-        response = boto_client.initiate_auth(
+        self.response = boto_client.initiate_auth(
             AuthFlow='USER_SRP_AUTH',
             AuthParameters=auth_params,
             ClientId=self.client_id
         )
-        if response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
-            challenge_response = self.process_challenge(response['ChallengeParameters'])
+        if self.response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
+            challenge_response = self.process_challenge(self.response['ChallengeParameters'])
             tokens = boto_client.respond_to_auth_challenge(
                 ClientId=self.client_id,
                 ChallengeName=self.PASSWORD_VERIFIER_CHALLENGE,
-                ChallengeResponses=challenge_response)
+                ChallengeResponses=challenge_response
+            )
 
             if tokens.get('ChallengeName') == self.NEW_PASSWORD_REQUIRED_CHALLENGE:
                 raise ForceChangePasswordException('Change password before authenticating')
 
             return tokens
         else:
-            raise NotImplementedError('The %s challenge is not supported' % response['ChallengeName'])
+            raise NotImplementedError('The %s challenge is not supported' % self.response['ChallengeName'])
 
     def set_new_password_challenge(self, new_password, client=None):
         boto_client = self.client or client
         auth_params = self.get_auth_params()
-        response = boto_client.initiate_auth(
+        self.response = boto_client.initiate_auth(
             AuthFlow='USER_SRP_AUTH',
             AuthParameters=auth_params,
             ClientId=self.client_id
         )
-        if response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
-            challenge_response = self.process_challenge(response['ChallengeParameters'])
+        if self.response['ChallengeName'] == self.PASSWORD_VERIFIER_CHALLENGE:
+            challenge_response = self.process_challenge(self.response['ChallengeParameters'])
             tokens = boto_client.respond_to_auth_challenge(
                 ClientId=self.client_id,
                 ChallengeName=self.PASSWORD_VERIFIER_CHALLENGE,
@@ -228,4 +244,14 @@ class AWSSRP(object):
                 return new_password_response
             return tokens
         else:
-            raise NotImplementedError('The %s challenge is not supported' % response['ChallengeName'])
+            raise NotImplementedError('The %s challenge is not supported' % self.response['ChallengeName'])
+
+    # def close_ssl_socket(self):
+    #     """
+    #     Force the SSL Socket connection to close.  See these open issues.
+    #     https://github.com/boto/boto3/issues/454
+    #     https://github.com/kennethreitz/requests/issues/2963#issuecomment-169631513
+    #     :return: None
+    #     """
+    #     self.response.raw.close()
+    #     self.response.raw._connection.close()

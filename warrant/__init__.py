@@ -3,7 +3,6 @@ from envs import env
 import boto3
 import requests
 import jwt
-# from jose import jwt, JWTError
 
 from .aws_srp import AWSSRP
 from .exceptions import TokenVerificationException
@@ -86,17 +85,17 @@ class Cognito(object):
     user_class = UserObj
 
     def __init__(
-            self,
-            user_pool_id,
-            client_id,
-            user_pool_region=None,
-            username=None,
-            id_token=None,
-            refresh_token=None,
-            access_token=None,
-            secret_hash=None,
-            access_key=None,
-            secret_key=None,
+        self,
+        user_pool_id,
+        client_id,
+        user_pool_region=None,
+        username=None,
+        id_token=None,
+        refresh_token=None,
+        access_token=None,
+        secret_hash=None,
+        access_key=None,
+        secret_key=None,
     ):
         """
         :param user_pool_id: Cognito User Pool ID
@@ -120,11 +119,12 @@ class Cognito(object):
         self.token_type = None
 
         if access_key and secret_key:
-            self.client = boto3.client('cognito-idp',
-                                       aws_access_key_id=access_key,
-                                       aws_secret_access_key=secret_key,
-                                       region_name=self.user_pool_region
-                                       )
+            self.client = boto3.client(
+                'cognito-idp',
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+                region_name=self.user_pool_region
+            )
         else:
             self.client = boto3.client('cognito-idp')
 

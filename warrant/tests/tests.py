@@ -2,7 +2,8 @@ import unittest
 from mock import patch
 
 from warrant import Cognito, UserObj, TokenVerificationException
-from warrant.secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD
+from warrant.secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD, \
+    COGNITO_TEST_EMAIL
 from warrant.aws_srp import AWSSRP
 
 
@@ -166,12 +167,32 @@ class CognitoAuthTestCase(unittest.TestCase):
 class AWSSRPTestCase(unittest.TestCase):
 
     def setUp(self):
+        """
+        Create instance of AWS Secure Remote Password.
+        :return: None
+        """
         self.cognito_user_pool_id = COGNITO_USER_POOL_ID
         self.app_id = COGNITO_APP_ID
         self.username = COGNITO_TEST_USERNAME
         self.password = COGNITO_TEST_PASSWORD
+        self.email = COGNITO_TEST_EMAIL
 
-        self.aws = AWSSRP(
+        # Create a user if one doesn't already exist.
+        user = Cognito(
+            self.cognito_user_pool_id,
+            self.app_id,
+            username=self.username
+        )
+        try:
+            response = user.register(
+                username=self.username,
+                password=self.password,
+                email=self.email,
+            )
+        except Exception:         # The user already exists which is great.
+            pass
+
+        self.awssrp = AWSSRP(
             username=self.username,
             password=self.password,
             pool_id=self.cognito_user_pool_id,
@@ -179,10 +200,10 @@ class AWSSRPTestCase(unittest.TestCase):
         )
 
     def tearDown(self):
-        del self.aws
+        del self.awssrp
 
     def test_authenticate_user(self):
-        tokens = self.aws.authenticate_user()
+        tokens = self.awssrp.authenticate_user()
         self.assertTrue('IdToken' in tokens['AuthenticationResult'])
         self.assertTrue('AccessToken' in tokens['AuthenticationResult'])
         self.assertTrue('RefreshToken' in tokens['AuthenticationResult'])
