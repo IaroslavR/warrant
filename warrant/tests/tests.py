@@ -7,9 +7,6 @@ from warrant import Cognito, UserObj, TokenVerificationException
 from warrant.aws_srp import AWSSRP
 
 
-AWSSRP_TEST_FILE = 'awssrp_test_variables.json'
-
-
 class UserObjTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -33,9 +30,9 @@ class UserObjTestCase(unittest.TestCase):
 
     def test_init(self):
         u = UserObj('bjones', self.user_info, self.user, self.user_metadata)
-        self.assertEqual(u.pk,self.user_metadata.get('username'))
-        self.assertEqual(u.name,self.user_info[0].get('Value'))
-        self.assertEqual(u.user_status,self.user_metadata.get('user_status'))
+        self.assertEqual(u.pk, self.user_metadata.get('username'))
+        self.assertEqual(u.name, self.user_info[0].get('Value'))
+        self.assertEqual(u.user_status, self.user_metadata.get('user_status'))
 
 
 class CognitoAuthTestCase(unittest.TestCase):
@@ -45,9 +42,11 @@ class CognitoAuthTestCase(unittest.TestCase):
         self.app_id = COGNITO_APP_ID
         self.username = COGNITO_TEST_USERNAME
         self.password = COGNITO_TEST_PASSWORD
-        self.user = Cognito(self.cognito_user_pool_id,self.app_id,
-                         username=self.username)
-
+        self.user = Cognito(
+            self.cognito_user_pool_id,
+            self.app_id,
+            username=self.username
+        )
 
     def test_authenticate(self):
         self.user.authenticate(self.password)
