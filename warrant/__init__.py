@@ -461,7 +461,7 @@ class Cognito(object):
             Code=confirmation_code
         )
 
-    def renew_access_token(self):
+    def renew_access_token(self, auth_optionals=None):
         """
         Sets a new access token on the User using the refresh token.
 
@@ -474,13 +474,23 @@ class Cognito(object):
 
         'DEVICE_KEY' is needed in AuthParameters. See AuthParameters section.
         https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
+
+        auth_parameters REFRESH_TOKEN_AUTH/REFRESH_TOKEN: USERNAME (required), SECRET_HASH (required if the app client
+        is configured with a client secret), REFRESH_TOKEN (required), DEVICE_KEY. [From AWS APIReference Link above.]
+
+        :param auth_optionals: (dict) - A dictionary containing optional AWS authentication parameters SECRET_HASH or
+            REFRESH_TOKEN. Example: { 'SECRET_HASH': <optional>, 'DEVICE_KEY': <optional>, }. Note that the SECRET_HASH
+            needs to be computed separately. See: https://stackoverflow.com/a/44245099/1783439
         """
+        auth_parameters = {
+            'USERNAME': self.username,
+            'REFRESH_TOKEN': self.refresh_token,
+        }
+
         refresh_response = self.client.initiate_auth(
             ClientId=self.client_id,
             AuthFlow='REFRESH_TOKEN',
-            AuthParameters={
-                'REFRESH_TOKEN': self.refresh_token
-            },
+            AuthParameters=auth_parameters,
         )
 
         self._set_attributes(
