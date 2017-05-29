@@ -3,7 +3,7 @@ from mock import patch
 
 from warrant import Cognito, UserObj, TokenVerificationException
 from warrant.secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD, \
-    COGNITO_TEST_EMAIL
+    COGNITO_TEST_EMAIL, COGNITO_TEST_ADMIN_USERNAME, COGNITO_TEST_ADMIN_PASSWORD, COGNITO_TEST_ADMIN_EMAIL
 from warrant.aws_srp import AWSSRP
 
 
@@ -47,6 +47,13 @@ class CognitoAuthTestCase(unittest.TestCase):
             self.app_id,
             username=self.username
         )
+        self.admin_username = COGNITO_TEST_ADMIN_USERNAME
+        self.admin_password = COGNITO_TEST_ADMIN_PASSWORD
+        self.admin_user = Cognito(
+            self.cognito_user_pool_id,
+            self.app_id,
+            username=self.admin_username
+        )
 
     def test_authenticate(self):
         self.user.authenticate(self.password)
@@ -70,22 +77,23 @@ class CognitoAuthTestCase(unittest.TestCase):
 
     @patch('warrant.Cognito', autospec=True)
     def test_register(self, cognito_user):
-        u = cognito_user(
+        user = cognito_user(
             self.cognito_user_pool_id, 
             self.app_id,
             username=self.username
         )
-        res = u.register(
+        response = user.register(
             username='sampleuser',
             password='sample4#Password',
             given_name='Brian',
             family_name='Jones',
             name='Brian Jones',
-            email='bjones39@capless.io',
+            email='test@foodog.io',
             phone_number='+19194894555',
             gender='Male',
             preferred_username='billyocean'
         )
+        print('test_register -> response', response)
         #TODO: Write assumptions
 
     def test_renew_tokens(self):
@@ -155,10 +163,10 @@ class CognitoAuthTestCase(unittest.TestCase):
                 'somerandom': 'attribute'
             }
         )
-        self.assertEqualss(u.somerandom, 'attribute')
+        self.assertEquals(u.somerandom, 'attribute')
 
     def test_admin_authenticate(self):
-        self.user.admin_authenticate(self.password)
+        self.admin_user.admin_authenticate(self.admin_password)
         self.assertNotEqual(self.user.access_token, None)
         self.assertNotEqual(self.user.id_token, None)
         self.assertNotEqual(self.user.refresh_token, None)
