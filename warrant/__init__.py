@@ -138,16 +138,13 @@ class Cognito(object):
         kid = jwt.get_unverified_header(token).get('kid')
         unverified_claims = jwt.get_unverified_claims(token)
         token_use_verified = unverified_claims.get('token_use') == token_use
-        # print('kid', kid)
-        # print('token_use', token_use)
 
         if not token_use_verified:
             raise TokenVerificationException('Your {} token use could not be verified.')
 
         hmac_key = self.get_key(kid)
-        # print('hmac_key', hmac_key)
-
         algorithm = 'RS256'
+
         if hmac_key['alg'] != algorithm:
             raise AlgorithmVerificationException('Expected algorithm %s got %s instead' % (algorithm, hmac_key['alg']))
 
@@ -198,9 +195,7 @@ class Cognito(object):
         if not self.access_token:
             raise AttributeError('Access Token Required to Check Token')
         now = datetime.now()
-        # print('check_token -> self.access_token', self.access_token)
         dec_access_token = jwt.get_unverified_claims(self.access_token)
-        # print('dec_access_token', dec_access_token)
 
         if now > datetime.fromtimestamp(dec_access_token['exp']):
             self.renew_access_token()
@@ -299,7 +294,6 @@ class Cognito(object):
         tokens = awssrp.authenticate_user()
         self.verify_token(tokens['AuthenticationResult']['IdToken'], 'id_token', 'id')
         self.refresh_token = tokens['AuthenticationResult']['RefreshToken']
-        # print('authenticate -> self.refresh_token', self.refresh_token)
         self.verify_token(tokens['AuthenticationResult']['AccessToken'], 'access_token', 'access')
         self.token_type = tokens['AuthenticationResult']['TokenType']
 
@@ -472,8 +466,6 @@ class Cognito(object):
         NOTE: Does not work if "Device Tracking" is turned on.
         Reference: https://stackoverflow.com/a/40875783/1783439
         """
-        # print('renew_access_token -> self.client_id', self.client_id)
-        # print('renew_access_token -> self.refresh_token', self.refresh_token)
         refresh_response = self.client.initiate_auth(
             ClientId=self.client_id,
             AuthFlow='REFRESH_TOKEN',
@@ -481,7 +473,6 @@ class Cognito(object):
                 'REFRESH_TOKEN': self.refresh_token
             },
         )
-        # print('refresh_response', refresh_response)
 
         self._set_attributes(
             refresh_response,
