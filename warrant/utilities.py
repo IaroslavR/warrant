@@ -10,8 +10,13 @@ def merge_dicts(dict1, dict2):
     """
     Takes two dictionaries and merges them together.
 
-    Note: If a duplicate key exists in dict2 the value of the key in dict2 will be used i.e. The value dict1 will be
-    overwritten.
+    Note: In the event that a key exists in both dict1 and dict2 the value of the key in dict2 will be used
+    i.e. The value dict1 will be overwritten by the value in dict2.
+
+    > dict1 = {'squirrel': 1, 'bird': 2}
+    > dict2 = {'squirrel': 2, 'flower': 3}
+    > merge_dicts(dict1, dict2)
+    {'squirrel': 2, 'bird': 2, 'flower': 3}
 
     Accurate/Idiomatic Reference: http://treyhunner.com/2016/02/how-to-merge-dictionaries-in-python/
     Performance Reference: https://gist.github.com/treyhunner/f35292e676efa0be1728
