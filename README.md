@@ -6,10 +6,10 @@ Makes working with AWS Cognito easier for Python developers.
 
 [![Build Status](https://travis-ci.org/capless/warrant.svg?branch=master)](https://travis-ci.org/capless/warrant)
 
-## NOTE: This fork requires a custom install of python-jose with pycryptodome so it works on Windows.
+## NOTE: On Windows, this requires a custom install of python-jose with pycryptodome.
 Clone https://github.com/nueverest/python-jose.git
+Activate virtual environment for `warrant`
 cd <python-jose-project-directory>
-Activate virtual environment
 `python setup.py install`
 
 ## Getting Started
