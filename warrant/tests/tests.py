@@ -96,23 +96,23 @@ class CognitoAuthTestCase(unittest.TestCase):
         print('test_register -> response', response)
         #TODO: Write assumptions
 
-    def test_renew_tokens(self):
+    def test_renew_access_tokens(self):
         self.user.authenticate(self.password)
         self.user.renew_access_token()
 
     @patch('warrant.Cognito', autospec=True)
     def test_update_profile(self, cognito_user):
-        u = cognito_user(
+        user = cognito_user(
             self.cognito_user_pool_id,
             self.app_id,
             username=self.username
         )
-        u.authenticate(self.password)
-        u.update_profile({'given_name': 'Jenkins'})
+        user.authenticate(self.password)
+        user.update_profile({'given_name': 'Jenkins'})
 
     def test_admin_get_user(self):
-        u = self.user.admin_get_user()
-        self.assertEquals(u.pk, self.username)
+        user = self.user.admin_get_user()
+        self.assertEquals(user.pk, self.username)
     
     def test_check_token(self):
         self.user.authenticate(self.password)
@@ -120,33 +120,33 @@ class CognitoAuthTestCase(unittest.TestCase):
 
     @patch('warrant.Cognito', autospec=True)
     def test_validate_verification(self, cognito_user):
-        u = cognito_user(
+        user = cognito_user(
             self.cognito_user_pool_id,
             self.app_id,
             username=self.username
         )
-        u.validate_verification('4321')
+        user.validate_verification('4321')
 
     @patch('warrant.Cognito', autospec=True)
     def test_confirm_forgot_password(self, cognito_user):
-        u = cognito_user(
+        user = cognito_user(
             self.cognito_user_pool_id,
             self.app_id,
             username=self.username
         )
-        u.confirm_forgot_password('4553', 'samplepassword')
+        user.confirm_forgot_password('4553', 'samplepassword')
         with self.assertRaises(TypeError) as vm:
-            u.confirm_forgot_password(self.password)
+            user.confirm_forgot_password(self.password)
 
     @patch('warrant.Cognito', autospec=True)
     def test_change_password(self,cognito_user):
-        u = cognito_user(
+        user = cognito_user(
             self.cognito_user_pool_id,
             self.app_id,
             username=self.username
         )
-        u.authenticate(self.password)
-        u.change_password(self.password, 'crazypassword$45DOG')
+        user.authenticate(self.password)
+        user.change_password(self.password, 'crazypassword$45DOG')
 
         with self.assertRaises(TypeError) as vm:
             self.user.change_password(self.password)
