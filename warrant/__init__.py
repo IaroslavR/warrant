@@ -1,12 +1,11 @@
-import json
+from datetime import datetime
 import ast
 import boto3
-import jwt
-from jwt.algorithms import HMACAlgorithm
+from jose import jwt, JWTError
 
 from .aws_srp import AWSSRP
 from .secrets import AWS_REGION, COGNITO_JWKS
-from .exceptions import TokenVerificationException
+from .exceptions import TokenVerificationException, AlgorithmVerificationException
 
 
 def cognito_to_dict(attr_list, attr_map=dict()):
@@ -137,38 +136,30 @@ class Cognito(object):
 
     def verify_token(self, token, id_name, token_use):
         kid = jwt.get_unverified_header(token).get('kid')
-        hmac_key = self.get_key(kid)
+        unverified_claims = jwt.get_unverified_claims(token)
+        token_use_verified = unverified_claims.get('token_use') == token_use
         print('kid', kid)
         print('token_use', token_use)
+
+        if not token_use_verified:
+            raise TokenVerificationException('Your {} token use could not be verified.')
+
+        hmac_key = self.get_key(kid)
         print('hmac_key', hmac_key)
-        print('hmac_key[n]', hmac_key['n'])
-        options = {
-            'verify_exp': True,
-            'verify_aud': True,
-            'verify_iss': True,
-        }
 
-        hmac_alg = HMACAlgorithm(hmac_key['alg'])
-        the_key = hmac_alg.prepare_key(json.dumps(hmac_key))
-        print('the_key', the_key)
-
-        # key_from_jwk = hmac_alg.from_jwk(json.dumps(hmac_key))
-        # print('key_frow_jwk', key_from_jwk)
+        algorithm = 'RS256'
+        if hmac_key['alg'] != algorithm:
+            raise AlgorithmVerificationException('Expected algorithm %s got %s instead' % (algorithm, hmac_key['alg']))
 
         try:
-            jwt.decode(
-                jwt=token,
-                key=json.dumps(hmac_key),
-                algorithm=hmac_key['alg'],
-                #algorithms=[hmac_key['alg']],
-                # options=options
-            )
-        except jwt.DecodeError:
-            # raise TokenVerificationException('Your {} token could not be verified.')
-            raise jwt.DecodeError
+            verified = jwt.decode(token, hmac_key, algorithms=[algorithm],
+                                  audience=unverified_claims.get('aud'),
+                                  issuer=unverified_claims.get('iss'))
+        except JWTError:
+            raise TokenVerificationException('Your {} token could not be verified.')
 
         setattr(self, id_name, token)
-        return True
+        return verified
 
     def get_user_obj(self, username=None, attribute_list=[], metadata={}, attr_map=dict()):
         """
@@ -206,22 +197,12 @@ class Cognito(object):
         """
         if not self.access_token:
             raise AttributeError('Access Token Required to Check Token')
-        kid = jwt.get_unverified_header(self.access_token).get('kid')
-        hmac_key = self.get_key(kid)
-        options = {
-            'verify_exp': True,
-            'verify_aud': True,
-            'verify_iss': True,
-        }
+        now = datetime.now()
+        print('check_token -> self.access_token', self.access_token)
+        dec_access_token = jwt.get_unverified_claims(self.access_token)
+        print('dec_access_token', dec_access_token)
 
-        try:
-            jwt.decode(
-                jwt=self.access_token,
-                key=hmac_key,
-                algorithms=['RS256'],
-                options=options
-            )
-        except jwt.DecodeError:
+        if now > datetime.fromtimestamp(dec_access_token['exp']):
             self.renew_access_token()
             return True
         return False
