@@ -493,7 +493,6 @@ class Cognito(object):
         )
 
     def delete_user(self):
-
         self.client.delete_user(
             AccessToken=self.access_token
         )
