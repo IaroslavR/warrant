@@ -94,7 +94,7 @@ class CognitoAuthTestCase(unittest.TestCase):
             preferred_username='billyocean'
         )
         print('test_register -> response', response)
-        #TODO: Write assumptions
+        # TODO: Write assumptions
 
     def test_renew_access_tokens(self):
         self.user.authenticate(self.password)
@@ -139,7 +139,7 @@ class CognitoAuthTestCase(unittest.TestCase):
             user.confirm_forgot_password(self.password)
 
     @patch('warrant.Cognito', autospec=True)
-    def test_change_password(self,cognito_user):
+    def test_change_password(self, cognito_user):
         user = cognito_user(
             self.cognito_user_pool_id,
             self.app_id,
