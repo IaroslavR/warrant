@@ -19,12 +19,14 @@ class UtilitiesTestCase(unittest.TestCase):
         print(json.dumps(merge_dicts(dict1=dict1, dict2=dict2)))
         self.assertEqual(expected, merge_dicts(dict1=dict1, dict2=dict2))
 
-    def test_merge_dicts_invalid_type_not_a_dict1(self):
-        dict1 = ['incorrect', 'invalid']
+    def test_merge_dicts_invalid_type_None_dict1(self):
+        dict1 = None
         dict2 = {'squirrel': 1, 'bird': 2}
         self.assertRaises(TypeError, merge_dicts, dict1, dict2)
 
-    def test_merge_dicts_invalid_type_not_a_dict2(self):
+    def test_merge_dicts_invalid_type_List_not_a_dict2(self):
         dict1 = {'squirrel': 1, 'bird': 2}
         dict2 = ['incorrect', 'invalid']
         self.assertRaises(TypeError, merge_dicts, dict1, dict2)
+
+

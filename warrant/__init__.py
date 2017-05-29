@@ -5,6 +5,7 @@ from jose import jwt, JWTError
 
 from .aws_srp import AWSSRP
 from .secrets import AWS_REGION, COGNITO_JWKS
+from .utilities import merge_dicts
 from .exceptions import TokenVerificationException, AlgorithmVerificationException
 
 
@@ -482,10 +483,14 @@ class Cognito(object):
             REFRESH_TOKEN. Example: { 'SECRET_HASH': <optional>, 'DEVICE_KEY': <optional>, }. Note that the SECRET_HASH
             needs to be computed separately. See: https://stackoverflow.com/a/44245099/1783439
         """
+        if not auth_optionals:
+            auth_optionals = dict()
+
         auth_parameters = {
             'USERNAME': self.username,
             'REFRESH_TOKEN': self.refresh_token,
         }
+        auth_parameters = merge_dicts(auth_optionals, auth_parameters)
 
         refresh_response = self.client.initiate_auth(
             ClientId=self.client_id,
