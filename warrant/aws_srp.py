@@ -56,14 +56,14 @@ def pad_hex(long_int):
     :return {String} Padded hex string.
     """
     if not isinstance(long_int, six.string_types):
-        hashStr = long_to_hex(long_int)
+        padded_hash = long_to_hex(long_int)
     else:
-        hashStr = long_int
-    if len(hashStr) % 2 == 1:
-        hashStr = '0%s' % hashStr
-    elif hashStr[0] in '89ABCDEFabcdef':
-        hashStr = '00%s' % hashStr
-    return hashStr
+        padded_hash = long_int
+    if len(padded_hash) % 2 == 1:
+        padded_hash = '0%s' % padded_hash
+    elif padded_hash[0] in '89ABCDEFabcdef':
+        padded_hash = '00%s' % padded_hash
+    return padded_hash
 
 
 def compute_hkdf(ikm, salt):
@@ -158,8 +158,10 @@ class AWSSRP(object):
         g_mod_pow_xn = pow(self.g, x_value, self.big_n)
         int_value2 = server_b_value - self.k * g_mod_pow_xn
         s_value = pow(int_value2, self.small_a_value + u_value * x_value, self.big_n)
-        hkdf = compute_hkdf(bytearray.fromhex(pad_hex(s_value)),
-                           bytearray.fromhex(pad_hex(long_to_hex(u_value))))
+        hkdf = compute_hkdf(
+            bytearray.fromhex(pad_hex(s_value)),
+            bytearray.fromhex(pad_hex(long_to_hex(u_value)))
+        )
         return hkdf
 
     def get_auth_params(self):

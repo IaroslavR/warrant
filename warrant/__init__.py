@@ -23,6 +23,7 @@ def cognito_to_dict(attr_list, attr_map=dict()):
 def dict_to_cognito(attributes, attr_map=dict()):
     """
     :param attributes: Dictionary of User Pool attribute names/values
+    :param attr_map: Map of attributes.
     :return: list of User Pool attribute formatted dicts: {'Name': <attr_name>, 'Value': <attr_value>}
     """
     for k, v in attr_map.items():
@@ -225,7 +226,7 @@ class Cognito(object):
             }
         }
         """
-        user_attrs = [{'Name': key, 'Value': value} for key, value in kwargs.items()]
+        # user_attrs = [{'Name': key, 'Value': value} for key, value in kwargs.items()]     # Uncomment for testing.
         response = self.client.sign_up(
             ClientId=self.client_id,
             Username=username,
