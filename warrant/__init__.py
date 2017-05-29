@@ -466,10 +466,13 @@ class Cognito(object):
         Sets a new access token on the User using the refresh token.
 
         NOTE:
+        Does not work if "App client secret" is enabled. 'SECRET_HASH' is needed in AuthParameters.
+        'SECRET_HASH' requires HMAC calculations.
+
         Does not work if "Device Tracking" is turned on.
         https://stackoverflow.com/a/40875783/1783439
 
-        'DEVICE_KEY' is needed. See AuthParameters section.
+        'DEVICE_KEY' is needed in AuthParameters. See AuthParameters section.
         https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html
         """
         refresh_response = self.client.initiate_auth(
