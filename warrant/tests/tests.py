@@ -3,7 +3,8 @@ from mock import patch
 
 from warrant import Cognito, UserObj, TokenVerificationException
 from warrant.secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD, \
-    COGNITO_TEST_EMAIL, COGNITO_TEST_ADMIN_USERNAME, COGNITO_TEST_ADMIN_PASSWORD, COGNITO_TEST_ADMIN_EMAIL
+    COGNITO_TEST_EMAIL, COGNITO_TEST_ADMIN_USERNAME, COGNITO_TEST_ADMIN_PASSWORD, COGNITO_FOODOG_SECRET_APP_ID, \
+    COGNITO_FOODOG_SECRET_CLIENT_SECRET
 from warrant.aws_srp import AWSSRP
 
 
@@ -35,7 +36,7 @@ class UserObjTestCase(unittest.TestCase):
         self.assertEquals(u.user_status, self.user_metadata.get('user_status'))
 
 
-class CognitoAuthTestCase(unittest.TestCase):
+class CognitoAuthStandardTestCase(unittest.TestCase):
 
     def setUp(self):
         self.cognito_user_pool_id = COGNITO_USER_POOL_ID
@@ -171,6 +172,135 @@ class CognitoAuthTestCase(unittest.TestCase):
     #     self.assertNotEqual(self.user.id_token, None)
     #     self.assertNotEqual(self.user.refresh_token, None)
 
+
+# class CognitoAuthClientSecretTestCase(unittest.TestCase):
+#     def setUp(self):
+#         self.cognito_user_pool_id = COGNITO_USER_POOL_ID
+#         self.app_id = COGNITO_FOODOG_SECRET_APP_ID
+#         self.username = COGNITO_TEST_USERNAME
+#         self.password = COGNITO_TEST_PASSWORD
+#         self.user = Cognito(
+#             self.cognito_user_pool_id,
+#             self.app_id,
+#             username=self.username
+#         )
+#         self.admin_username = COGNITO_TEST_ADMIN_USERNAME
+#         self.admin_password = COGNITO_TEST_ADMIN_PASSWORD
+#         self.admin_user = Cognito(
+#             self.cognito_user_pool_id,
+#             self.app_id,
+#             username=self.admin_username
+#         )
+#
+#     def test_authenticate(self):
+#         self.user.authenticate(self.password)
+#         self.assertNotEqual(self.user.access_token, None)
+#         self.assertNotEqual(self.user.id_token, None)
+#         self.assertNotEqual(self.user.refresh_token, None)
+#
+#     def test_verify_token(self):
+#         self.user.authenticate(self.password)
+#         bad_access_token = '{}wrong'.format(self.user.access_token)
+#
+#         with self.assertRaises(TokenVerificationException) as vm:
+#             self.user.verify_token(bad_access_token, 'access_token', 'access')
+#
+#     def test_logout(self):
+#         self.user.authenticate(self.password)
+#         self.user.logout()
+#         self.assertEquals(self.user.id_token, None)
+#         self.assertEquals(self.user.refresh_token, None)
+#         self.assertEquals(self.user.access_token, None)
+#
+#     @patch('warrant.Cognito', autospec=True)
+#     def test_register(self, cognito_user):
+#         user = cognito_user(
+#             self.cognito_user_pool_id,
+#             self.app_id,
+#             username=self.username
+#         )
+#         response = user.register(
+#             username='sampleuser',
+#             password='sample4#Password',
+#             given_name='Brian',
+#             family_name='Jones',
+#             name='Brian Jones',
+#             email='test@foodog.io',
+#             phone_number='+19194894555',
+#             gender='Male',
+#             preferred_username='billyocean'
+#         )
+#         print('test_register -> response', response)
+#         # TODO: Write assumptions
+#
+#     def test_renew_access_tokens(self):
+#         self.user.authenticate(self.password)
+#         self.user.renew_access_token()
+#
+#     @patch('warrant.Cognito', autospec=True)
+#     def test_update_profile(self, cognito_user):
+#         user = cognito_user(
+#             self.cognito_user_pool_id,
+#             self.app_id,
+#             username=self.username
+#         )
+#         user.authenticate(self.password)
+#         user.update_profile({'given_name': 'Jenkins'})
+#
+#     def test_admin_get_user(self):
+#         user = self.user.admin_get_user()
+#         self.assertEquals(user.pk, self.username)
+#
+#     def test_check_token(self):
+#         self.user.authenticate(self.password)
+#         self.assertFalse(self.user.check_token())
+#
+#     @patch('warrant.Cognito', autospec=True)
+#     def test_validate_verification(self, cognito_user):
+#         user = cognito_user(
+#             self.cognito_user_pool_id,
+#             self.app_id,
+#             username=self.username
+#         )
+#         user.validate_verification('4321')
+#
+#     @patch('warrant.Cognito', autospec=True)
+#     def test_confirm_forgot_password(self, cognito_user):
+#         user = cognito_user(
+#             self.cognito_user_pool_id,
+#             self.app_id,
+#             username=self.username
+#         )
+#         user.confirm_forgot_password('4553', 'samplepassword')
+#         with self.assertRaises(TypeError) as vm:
+#             user.confirm_forgot_password(self.password)
+#
+#     @patch('warrant.Cognito', autospec=True)
+#     def test_change_password(self, cognito_user):
+#         user = cognito_user(
+#             self.cognito_user_pool_id,
+#             self.app_id,
+#             username=self.username
+#         )
+#         user.authenticate(self.password)
+#         user.change_password(self.password, 'crazypassword$45DOG')
+#
+#         with self.assertRaises(TypeError) as vm:
+#             self.user.change_password(self.password)
+#
+#     def test_set_attributes(self):
+#         user = Cognito(self.cognito_user_pool_id, self.app_id)
+#         user._set_attributes(
+#             {
+#                 'ResponseMetadata': {
+#                     'HTTPStatusCode': 200
+#                 }
+#             },
+#             {
+#                 'somerandom': 'attribute'
+#             }
+#         )
+#         self.assertEquals(user.somerandom, 'attribute')
 
 class AWSSRPTestCase(unittest.TestCase):
 
