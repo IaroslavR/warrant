@@ -259,29 +259,29 @@ class Cognito(object):
             ConfirmationCode=confirmation_code
         )
 
-    def admin_authenticate(self, password):
-        """
-        Authenticate the user using admin super privileges
-        :param password: User's password
-        :return:
-        """
-        auth_params = {
-            'USERNAME': self.username,
-            'PASSWORD': password
-        }
-
-        tokens = self.client.admin_initiate_auth(
-            UserPoolId=self.user_pool_id,
-            ClientId=self.client_id,
-            # AuthFlow='USER_SRP_AUTH'|'REFRESH_TOKEN_AUTH'|'REFRESH_TOKEN'|'CUSTOM_AUTH'|'ADMIN_NO_SRP_AUTH',
-            AuthFlow='ADMIN_NO_SRP_AUTH',
-            AuthParameters=auth_params,
-        )
-
-        self.verify_token(tokens['AuthenticationResult']['IdToken'], 'id_token', 'id')
-        self.refresh_token = tokens['AuthenticationResult']['RefreshToken']
-        self.verify_token(tokens['AuthenticationResult']['AccessToken'], 'access_token', 'access')
-        self.token_type = tokens['AuthenticationResult']['TokenType']
+    # def admin_authenticate(self, password):
+    #     """
+    #     Authenticate the user using admin super privileges
+    #     :param password: User's password
+    #     :return:
+    #     """
+    #     auth_params = {
+    #         'USERNAME': self.username,
+    #         'PASSWORD': password
+    #     }
+    #
+    #     tokens = self.client.admin_initiate_auth(
+    #         UserPoolId=self.user_pool_id,
+    #         ClientId=self.client_id,
+    #         # AuthFlow='USER_SRP_AUTH'|'REFRESH_TOKEN_AUTH'|'REFRESH_TOKEN'|'CUSTOM_AUTH'|'ADMIN_NO_SRP_AUTH',
+    #         AuthFlow='ADMIN_NO_SRP_AUTH',
+    #         AuthParameters=auth_params,
+    #     )
+    #
+    #     self.verify_token(tokens['AuthenticationResult']['IdToken'], 'id_token', 'id')
+    #     self.refresh_token = tokens['AuthenticationResult']['RefreshToken']
+    #     self.verify_token(tokens['AuthenticationResult']['AccessToken'], 'access_token', 'access')
+    #     self.token_type = tokens['AuthenticationResult']['TokenType']
 
     def authenticate(self, password):
         """
