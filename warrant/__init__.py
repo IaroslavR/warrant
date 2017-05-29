@@ -1,7 +1,8 @@
+import json
 import ast
 import boto3
-import requests
 import jwt
+from jwt.algorithms import HMACAlgorithm
 
 from .aws_srp import AWSSRP
 from .secrets import AWS_REGION, COGNITO_JWKS
@@ -139,18 +140,28 @@ class Cognito(object):
         hmac_key = self.get_key(kid)
         print('kid', kid)
         print('token_use', token_use)
+        print('hmac_key', hmac_key)
+        print('hmac_key[n]', hmac_key['n'])
         options = {
             'verify_exp': True,
             'verify_aud': True,
             'verify_iss': True,
         }
 
+        hmac_alg = HMACAlgorithm(hmac_key['alg'])
+        the_key = hmac_alg.prepare_key(json.dumps(hmac_key))
+        print('the_key', the_key)
+
+        # key_from_jwk = hmac_alg.from_jwk(json.dumps(hmac_key))
+        # print('key_frow_jwk', key_from_jwk)
+
         try:
             jwt.decode(
-                jwt=self.access_token,
-                key=hmac_key,
-                algorithms=['RS256'],
-                options=options
+                jwt=token,
+                key=json.dumps(hmac_key),
+                algorithm=hmac_key['alg'],
+                #algorithms=[hmac_key['alg']],
+                # options=options
             )
         except jwt.DecodeError:
             # raise TokenVerificationException('Your {} token could not be verified.')
@@ -293,18 +304,18 @@ class Cognito(object):
 
     def authenticate(self, password):
         """
-        Authenticate the user using the SRP protocol
+        Authenticate the user using the Secure Remote Password (SRP) protocol
         :param password: The user's passsword
         :return:
         """
-        aws = AWSSRP(
+        awssrp = AWSSRP(
             username=self.username,
             password=password,
             pool_id=self.user_pool_id,
             client_id=self.client_id,
             client=self.client
         )
-        tokens = aws.authenticate_user()
+        tokens = awssrp.authenticate_user()
         self.verify_token(tokens['AuthenticationResult']['IdToken'], 'id_token', 'id')
         self.refresh_token = tokens['AuthenticationResult']['RefreshToken']
         self.verify_token(tokens['AuthenticationResult']['AccessToken'], 'access_token', 'access')
