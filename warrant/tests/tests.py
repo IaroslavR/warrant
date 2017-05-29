@@ -3,8 +3,8 @@ from mock import patch
 
 from warrant import Cognito, UserObj, TokenVerificationException
 from warrant.secrets import COGNITO_USER_POOL_ID, COGNITO_APP_ID, COGNITO_TEST_USERNAME, COGNITO_TEST_PASSWORD, \
-    COGNITO_TEST_EMAIL, COGNITO_TEST_ADMIN_USERNAME, COGNITO_TEST_ADMIN_PASSWORD, COGNITO_FOODOG_SECRET_APP_ID, \
-    COGNITO_FOODOG_SECRET_CLIENT_SECRET
+    COGNITO_TEST_EMAIL, COGNITO_TEST_ADMIN_USERNAME, COGNITO_TEST_ADMIN_PASSWORD, COGNITO_SECRET_APP_ID, \
+    COGNITO_SECRET_APP_CLIENT_SECRET
 from warrant.aws_srp import AWSSRP
 
 
@@ -176,7 +176,7 @@ class CognitoAuthStandardTestCase(unittest.TestCase):
 # class CognitoAuthClientSecretTestCase(unittest.TestCase):
 #     def setUp(self):
 #         self.cognito_user_pool_id = COGNITO_USER_POOL_ID
-#         self.app_id = COGNITO_FOODOG_SECRET_APP_ID
+#         self.app_id = COGNITO_SECRET_APP_ID
 #         self.username = COGNITO_TEST_USERNAME
 #         self.password = COGNITO_TEST_PASSWORD
 #         self.user = Cognito(
