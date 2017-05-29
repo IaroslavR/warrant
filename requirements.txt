@@ -1,6 +1,6 @@
 boto3>=1.4.3
 mock>=2.0.0
-PyJWT>=1.5.0
 requests>=2.13.0
 cryptography>=1.8.2
 pip
+# python-jose # Leave commented since this requires a custom install with pycryptodome.
